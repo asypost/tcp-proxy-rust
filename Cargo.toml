@@ -1,0 +1,9 @@
+[package]
+name = "proxy"
+version = "0.1.0"
+authors = ["shell <asypost@yeah.net>"]
+build="build.rs"
+
+[dependencies]
+threadpool = "1.7.0"
+num_cpus = "1.7.0"
