@@ -1,6 +1,8 @@
 //use std::env;
 
-fn main(){
-    println!("cargo:rustc-link-lib=static=LIBCMT");
-    println!("cargo:rustc-link-lib=static=MSVCRT");
+fn main() {
+    if cfg!(target_os = "windows") {
+        println!("cargo:rustc-link-lib=static=LIBCMT");
+        println!("cargo:rustc-link-lib=static=MSVCRT");
+    }
 }

@@ -1,11 +1,3 @@
-[root]
-name = "proxy"
-version = "0.1.0"
-dependencies = [
- "num_cpus 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "threadpool 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
 [[package]]
 name = "libc"
 version = "0.2.32"
@@ -17,6 +9,14 @@ version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.32 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "proxy"
+version = "0.1.0"
+dependencies = [
+ "num_cpus 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "threadpool 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -5,7 +5,7 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/proxy-nonblocking.exe",
+            "program": "${workspaceRoot}/target/debug/proxy.exe",
             "args": ["0.0.0.0:7878","218.22.20.34:1433"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
