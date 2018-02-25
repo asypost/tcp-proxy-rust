@@ -52,7 +52,7 @@ fn main() {
     } else {
         println!("参数过多，使用方法如下:");
         println!(
-            "proxy-server.exe [监听地址(格式为IP:Port)] [源服务器地址(格式为IP:Port)] [是否加密(可选,true表示加密)]"
+            "proxy-server.exe [监听地址(格式为IP:Port)] [源服务器地址(格式为IP:Port)] [是否加密(可选,true表示加密)] [是否使用GPU(true表示使用)]"
         );
     }
 }
