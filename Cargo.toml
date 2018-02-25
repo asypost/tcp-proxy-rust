@@ -7,3 +7,4 @@ build="build.rs"
 [dependencies]
 threadpool = "1.7.0"
 num_cpus = "1.7.0"
+ocl = "0.17"
