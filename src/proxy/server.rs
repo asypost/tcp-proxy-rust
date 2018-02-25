@@ -161,23 +161,25 @@ impl Crypt {
         let src = include_str!("crypt.cl");
         let mut platform: Option<ocl::Platform> = Option::None;
         let mut pro_que: Option<ProQue> = Option::None;
-        for plat in ocl::Platform::list().into_iter() {
-            platform = Option::Some(plat);
-            if let Ok(name) = plat.name() {
-                if name.starts_with("NVIDIA") {
-                    break;
+        if use_gpu{
+            for plat in ocl::Platform::list().into_iter() {
+                platform = Option::Some(plat);
+                if let Ok(name) = plat.name() {
+                    if name.starts_with("NVIDIA") {
+                        break;
+                    }
                 }
             }
-        }
-        if let Option::Some(platform) = platform {
-            let device_spec = DeviceSpecifier::TypeFlags(DeviceType::GPU);
-            if let Ok(que) = ProQue::builder()
-                .platform(platform)
-                .device(device_spec)
-                .src(src)
-                .build()
-            {
-                pro_que = Option::Some(que);
+            if let Option::Some(platform) = platform {
+                let device_spec = DeviceSpecifier::TypeFlags(DeviceType::GPU);
+                if let Ok(que) = ProQue::builder()
+                    .platform(platform)
+                    .device(device_spec)
+                    .src(src)
+                    .build()
+                {
+                    pro_que = Option::Some(que);
+                }
             }
         }
         Self {
