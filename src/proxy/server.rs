@@ -153,50 +153,86 @@ impl Server {
 pub struct Crypt {
     use_gpu: bool,
     key: u8,
-    gpu_pro_que: Option<ProQue>,
+    gpu_program_builder: Option<ocl::builders::ProgramBuilder>,
+    gpu_device: Option<ocl::Device>,
+    gpu_platform: Option<ocl::Platform>,
 }
 
 impl Crypt {
     pub fn new(key: u8, use_gpu: bool) -> Self {
         let src = include_str!("crypt.cl");
         let mut platform: Option<ocl::Platform> = Option::None;
-        let mut pro_que: Option<ProQue> = Option::None;
-        for plat in ocl::Platform::list().into_iter() {
-            platform = Option::Some(plat);
-            if let Ok(name) = plat.name() {
-                if name.starts_with("NVIDIA") {
-                    break;
+        let mut program_builder: Option<ocl::builders::ProgramBuilder> = Option::None;
+        let mut device: Option<ocl::Device> = Option::None;
+
+        if use_gpu {
+            for plat in ocl::Platform::list().into_iter() {
+                platform = Option::Some(plat);
+                if let Ok(name) = plat.name() {
+                    if name.starts_with("NVIDIA") {
+                        break;
+                    }
                 }
             }
-        }
-        if let Option::Some(platform) = platform {
-            let device_spec = DeviceSpecifier::TypeFlags(DeviceType::GPU);
-            if let Ok(que) = ProQue::builder()
-                .platform(platform)
-                .device(device_spec)
-                .src(src)
-                .build()
-            {
-                pro_que = Option::Some(que);
+
+            if let Option::Some(platform) = platform {
+                if let Ok(devices) = ocl::Device::list(platform, Option::Some(DeviceType::GPU)) {
+                    if devices.len() > 0 {
+                        device = Option::Some(devices[0]);
+                        program_builder = Option::Some(
+                            ocl::Program::builder()
+                                .src(src)
+                                .devices(DeviceSpecifier::Single(devices[0])),
+                        );
+                    }
+                }
             }
         }
         Self {
             key,
             use_gpu,
-            gpu_pro_que: pro_que,
+            gpu_platform: platform,
+            gpu_program_builder: program_builder,
+            gpu_device: device,
         }
     }
 
+    pub fn create_gpu_pro_que(&self) -> ocl::Result<ProQue> {
+        if let Option::Some(ref program_builder) = self.gpu_program_builder {
+            if let Option::Some(platform) = self.gpu_platform {
+                if let Option::Some(device) = self.gpu_device {
+                    if let Ok(context) = ocl::Context::builder()
+                        .platform(platform)
+                        .devices(device)
+                        .build()
+                    {
+                        let queue = ocl::Queue::new(&context, device, Option::None)?;
+                        let program = program_builder.clone().build(&context)?;
+                        let pro_que = ProQue::new(
+                            context,
+                            queue,
+                            program,
+                            Option::Some(ocl::SpatialDims::One(256)),
+                        );
+                        return Ok(pro_que);
+                    }
+                }
+            }
+        }
+        return Err(ocl::Error::from("No supported OpenCL platform found"));
+    }
+
     pub fn gpu_available(&self) -> bool {
-        match self.gpu_pro_que {
+        match self.gpu_program_builder {
             Option::Some(_) => true,
             Option::None => false,
         }
     }
-    fn gpu_encode(&mut self, data: &[u8]) -> ocl::Result<Vec<u8>> {
+    fn gpu_encode(&self, data: &[u8]) -> ocl::Result<Vec<u8>> {
         let mut result = Vec::from(data);
 
-        if let Option::Some(ref mut pro_que) = self.gpu_pro_que {
+        if let Option::Some(_) = self.gpu_program_builder {
+            let mut pro_que = self.create_gpu_pro_que()?;
             pro_que.set_dims(data.len());
             let buffer = pro_que.create_buffer::<u8>()?;
             buffer.write(&result[..]).enq()?;
@@ -221,7 +257,7 @@ impl Crypt {
         return Err(ocl::Error::from("No supported OpenCL platform found"));
     }
 
-    fn gpu_decode(&mut self, data: &[u8]) -> ocl::Result<Vec<u8>> {
+    fn gpu_decode(&self, data: &[u8]) -> ocl::Result<Vec<u8>> {
         return self.gpu_encode(data);
     }
 
@@ -237,7 +273,7 @@ impl Crypt {
         return self.cpu_encode(data);
     }
 
-    pub fn encode(&mut self, data: &[u8]) -> Vec<u8> {
+    pub fn encode(&self, data: &[u8]) -> Vec<u8> {
         if self.use_gpu && self.gpu_available() {
             match self.gpu_encode(data) {
                 Ok(result) => return result,
@@ -251,7 +287,7 @@ impl Crypt {
         return self.cpu_encode(data);
     }
 
-    pub fn decode(&mut self, data: &[u8]) -> Vec<u8> {
+    pub fn decode(&self, data: &[u8]) -> Vec<u8> {
         if self.use_gpu && self.gpu_available() {
             match self.gpu_decode(data) {
                 Ok(result) => return result,
