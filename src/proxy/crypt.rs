@@ -4,7 +4,6 @@ use ocl::flags::DeviceType;
 use ocl::builders::DeviceSpecifier;
 use std::vec::Vec;
 
-
 pub struct Crypt {
     use_gpu: bool,
     key: u8,
@@ -61,19 +60,21 @@ impl Crypt {
             Option::None => false,
         }
     }
+
+    #[inline]
     fn gpu_encode(&mut self, data: &[u8]) -> ocl::Result<Vec<u8>> {
         let mut result = Vec::from(data);
 
         if let Some(ref mut pro_que_builder) = self.gpu_pro_que_builder {
-            let mut pro_que =pro_que_builder.dims(data.len()).build()?;
+            let mut pro_que = pro_que_builder.dims(data.len()).build()?;
             // let buffer = pro_que.create_buffer::<u8>()?;
             // buffer.write(&result[..]).enq()?;
             let buffer = ocl::Buffer::builder()
-            .queue(pro_que.queue().clone())
-            .flags(ocl::MemFlags::new().read_write().use_host_ptr())
-            .len(data.len())
-            .host_data(&result[..])
-            .build()?;
+                .queue(pro_que.queue().clone())
+                .flags(ocl::MemFlags::new().read_write().use_host_ptr())
+                .len(data.len())
+                .host_data(&result[..])
+                .build()?;
 
             let mut kernel = pro_que
                 .create_kernel("crypt")?
@@ -90,10 +91,12 @@ impl Crypt {
         return Err(ocl::Error::from("No supported OpenCL platform found"));
     }
 
+    #[inline]
     fn gpu_decode(&mut self, data: &[u8]) -> ocl::Result<Vec<u8>> {
         return self.gpu_encode(data);
     }
 
+    #[inline]
     fn cpu_encode(&self, data: &[u8]) -> Vec<u8> {
         let mut result: Vec<u8> = vec![];
         for d in data {
@@ -102,6 +105,7 @@ impl Crypt {
         return result;
     }
 
+    #[inline]
     fn cpu_decode(&self, data: &[u8]) -> Vec<u8> {
         return self.cpu_encode(data);
     }

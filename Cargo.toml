@@ -4,7 +4,10 @@ version = "0.1.0"
 authors = ["shell <asypost@yeah.net>"]
 build="build.rs"
 
+[profile.release]
+codegen-units = 4
+
 [dependencies]
-threadpool = "1.7.0"
-num_cpus = "1.7.0"
+threadpool = "1.7.1"
+num_cpus = "1.8.0"
 ocl = "0.17"
